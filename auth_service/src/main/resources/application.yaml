@@ -3,4 +3,24 @@ server:
 
 spring:
   application:
-    name: server
+    name: auth-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth_db
+    username: root
+    password: MySQL*123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+jwt:
+  secret: 6eb57d1739cae571420b5f60e7ea7fb3
