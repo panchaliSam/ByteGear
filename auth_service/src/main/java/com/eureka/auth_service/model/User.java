@@ -20,16 +20,13 @@ public class User {
     private Long id;
     @NotNull
     private String name;
+    @Column(unique = true)
+    @NotNull
     @Pattern(
             regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$",
             message = "Invalid email format"
     )
-    @NotNull
     private String email;
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
-            message = "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character"
-    )
     @NotNull
     private String password;
     @Enumerated(EnumType.STRING)

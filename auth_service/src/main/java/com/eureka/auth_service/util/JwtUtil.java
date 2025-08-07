@@ -4,12 +4,15 @@ import com.eureka.auth_service.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -20,10 +23,12 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        key = Keys.hmacShaKeyFor(secret.getBytes());
+        key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
+        log.info("JWT secret key initialized successfully.");
     }
 
     public String generateToken(User user) {
+        log.info("Generating JWT token for user: {}", user.getEmail());
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("id", user.getId())
@@ -61,8 +66,10 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try{
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            log.debug("JWT token validated.");
             return true;
         }catch (JwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
             return false;
         }
     }
