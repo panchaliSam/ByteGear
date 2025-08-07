@@ -27,7 +27,7 @@ public class JwtUtil {
         log.info("JWT secret key initialized successfully.");
     }
 
-    public String generateToken(User user) {
+    public String generateAccessToken(User user) {
         log.info("Generating JWT token for user: {}", user.getEmail());
         return Jwts.builder()
                 .setSubject(user.getEmail())
@@ -36,6 +36,19 @@ public class JwtUtil {
                 .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(User user) {
+        log.info("Generating refresh token for user: {}", user.getEmail());
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("id", user.getId())
+                .claim("email", user.getEmail())
+                .claim("role", user.getRole().name())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 3600000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -49,8 +62,12 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().get("email").toString();
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     public Long extractUserId(String token) {

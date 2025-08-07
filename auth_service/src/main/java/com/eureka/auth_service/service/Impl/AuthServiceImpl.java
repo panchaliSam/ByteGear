@@ -36,7 +36,8 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         return AuthResponse.builder()
-                .token(jwtUtil.generateToken(user))
+                .accessToken(jwtUtil.generateAccessToken(user))
+                .refreshToken(jwtUtil.generateRefreshToken(user))
                 .build();
     }
 
@@ -44,12 +45,35 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse authenticate(AuthRequest request) {
         log.info("Authenticating user: {}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Invalid credentials");
         }
+        return AuthResponse.builder()
+                .accessToken(jwtUtil.generateAccessToken(user))
+                .refreshToken(jwtUtil.generateRefreshToken(user))
+                .build();
+    }
 
-        String token = jwtUtil.generateToken(user);
-        return AuthResponse.builder().token(token).build();
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    public AuthResponse refresh(String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new RuntimeException("Invalid or expired refresh token");
+        }
+
+        String email = jwtUtil.extractUsername(refreshToken);
+        User user = getUserByEmail(email);
+
+        return AuthResponse.builder()
+                .accessToken(jwtUtil.generateAccessToken(user))
+                .refreshToken(refreshToken)
+                .build();
     }
 }
